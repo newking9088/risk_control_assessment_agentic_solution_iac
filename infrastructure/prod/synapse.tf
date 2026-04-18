@@ -3,8 +3,8 @@
 # Dependency chain:
 #   sql_server_random_passwords
 #     └─► synapse_workspace     (uses random admin password + app storage account)
-#           ├─► synapse_sql_pool
-#           ├─► synapse_sql_post  (Spark pool — same module, different version)
+#           ├─► synapse_sql_pool   (synapse-sql-pool/azurerm)
+#           ├─► synapse_spark_pool (synapse-spark-pool/azurerm)
 #           ├─► synapse_role_assignment
 #           └─► key_vault_secrets_synapse
 #
@@ -92,7 +92,7 @@ module "synapse_workspace" {
 # Synapse SQL Dedicated Pool
 module "synapse_sql_pool" {
   source  = "west.tfe.nginternal.com/platform/synapse-sql-pool/azurerm"
-  version = "3.1.0-3-1.7"
+  version = "5.1.1-3-1.7"
 
   for_each = module.synapse_workspace
 
@@ -109,11 +109,10 @@ module "synapse_sql_pool" {
 }
 
 # Synapse Spark Pool
-# Named "synapse_sql_post" per module inventory — uses the pool module v5.1.1
-# which supports Apache Spark configuration.
-module "synapse_sql_post" {
-  source  = "west.tfe.nginternal.com/platform/synapse-sql-pool/azurerm"
-  version = "5.1.1-3-1.7"
+# Uses the dedicated synapse-spark-pool/azurerm module — NOT the SQL pool module.
+module "synapse_spark_pool" {
+  source  = "west.tfe.nginternal.com/platform/synapse-spark-pool/azurerm"
+  version = "5.0.0-3-1.7"
 
   for_each = module.synapse_workspace
 

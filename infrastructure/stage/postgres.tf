@@ -64,6 +64,22 @@ module "time_sleep_postgres" {
   depends_on = [module.access_policies_byok_postgres]
 }
 
+# Random Password — PostgreSQL Admin
+# Generates a 25-char password with enforced character variety.
+# The result (a string) is passed to the postgres module's administrator_password.
+module "postgres_random_passwords" {
+  source  = "west.tfe.nginternal.com/platform/random-password/random"
+  version = "3.0.0-3-1.7"
+
+  for_each = var.enabled_modules.postgres ? toset(["app_postgres"]) : toset([])
+
+  length      = 25
+  min_upper   = 4
+  min_lower   = 4
+  min_numeric = 4
+  min_special = 4
+}
+
 # PostgreSQL Flexible Server
 module "postgres" {
   source  = "west.tfe.nginternal.com/platform/postgresql-flexible/azurerm"
@@ -88,15 +104,8 @@ module "postgres" {
     password_auth_enabled         : true
   }
 
-  # Random password config — 25 chars, enforces character variety.
   administrator_login    = var.__ngc.environment_details.user_parameters.naming_service.database.postgres_admin_user
-  administrator_password = {
-    length      : 25
-    min_upper   : 4
-    min_lower   : 4
-    min_numeric : 4
-    min_special : 4
-  }
+  administrator_password = module.postgres_random_passwords[each.key].result
 
   # Server-level extensions and connection pooler.
   # VECTOR enables pgvector for embedding storage.
@@ -143,7 +152,7 @@ module "postgres" {
 
   tags = local.tags
 
-  depends_on = [module.time_sleep_postgres]
+  depends_on = [module.time_sleep_postgres, module.postgres_random_passwords]
 }
 
 # PostgreSQL Flexible Database

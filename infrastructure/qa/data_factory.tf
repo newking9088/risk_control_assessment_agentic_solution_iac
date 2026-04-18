@@ -91,6 +91,10 @@ module "data_factory" {
 # Connects the ADF managed virtual network to the PostgreSQL Flexible Server.
 # Only created when BOTH data_factory AND postgres are enabled, so that the
 # PostgreSQL server ID is always available when this resource is created.
+# VERIFY BEFORE APPLY: This module was downgraded from v3.0.0 to v2.0.0.
+# Major-version changes often have incompatible input variable schemas.
+# Compare the v2.0.0 and v3.0.0 variables.tf in your TFE registry before applying.
+# If schemas are incompatible, bump the version back to 3.0.0-3-1.7.
 module "data_factory_managed_private_endpoint_postgres" {
   source  = "west.tfe.nginternal.com/platform/data-factory-managed-private-endpoint/azurerm"
   version = "2.0.0-3-1.7"

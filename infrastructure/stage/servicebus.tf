@@ -61,6 +61,10 @@ module "time_sleep_service_bus" {
 }
 
 # Service Bus Namespace
+# VERIFY BEFORE APPLY: The module path was changed from service-bus/azurerm to
+# servicebus-namespace/azurerm. Confirm that servicebus-namespace/azurerm v12.0.0
+# exists in your TFE platform/ registry. If only service-bus/azurerm is published,
+# revert the source string to: west.tfe.nginternal.com/platform/service-bus/azurerm
 module "service_bus" {
   source  = "west.tfe.nginternal.com/platform/servicebus-namespace/azurerm"
   version = "12.0.0-3-1.7"
