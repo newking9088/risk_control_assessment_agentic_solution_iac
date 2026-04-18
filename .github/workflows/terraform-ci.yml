@@ -25,7 +25,7 @@ jobs:
       matrix:
         env: [dev, qa, stage, prod]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: hashicorp/setup-terraform@v3
         with:
@@ -47,7 +47,7 @@ jobs:
     name: tflint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: terraform-linters/setup-tflint@latest
         with:
@@ -64,7 +64,7 @@ jobs:
     name: trivy config
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run Trivy
         uses: aquasecurity/trivy-action@0.30.0
