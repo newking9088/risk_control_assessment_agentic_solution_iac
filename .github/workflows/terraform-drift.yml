@@ -19,7 +19,7 @@ jobs:
         env: [dev, qa, stage, prod]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: hashicorp/setup-terraform@v3
         with:
