@@ -1,0 +1,29 @@
+# =============================================================================
+# vcluster.yaml — vCluster configuration for this environment.
+#
+# Deployed via the vcluster-deploy-<env>.yml GitHub Actions workflow.
+# Identical across all four environments; workflow sets the vCluster name
+# using the pattern: vc-<app_name>-<env>
+# =============================================================================
+
+controlPlane:
+  distro:
+    k3s:
+      enabled: true
+  statefulSet:
+    scheduling:
+      # OrderedReady ensures the control plane pod is fully running before
+      # any subsequent pods in the StatefulSet are started or replaced.
+      podManagementPolicy: OrderedReady
+
+sync:
+  fromHost:
+    ingressClasses:
+      # Sync IngressClass resources from the host cluster so the vCluster
+      # can reference the host nginx IngressClass in Ingress manifests.
+      enabled: true
+  toHost:
+    ingresses:
+      # Sync Ingress resources up to the host cluster so the host nginx
+      # controller handles actual traffic routing for vCluster workloads.
+      enabled: true

@@ -1,0 +1,102 @@
+# =============================================================================
+# terraform-plan-dev.yml — Terraform plan for the dev environment.
+#
+# Triggers:
+#   - Pull request to main (when infrastructure/dev/** files change)
+#   - Manual dispatch (with optional databricks flag)
+#
+# When databricks = true:
+#   - GIT_FOLDER becomes infrastructure/dev/databricks
+#   - TFE_WORKSPACE becomes <workspace>1 (separate TFE state)
+#
+# Placeholders in this file:
+#   __GH_ORG__               — GitHub organisation
+#   __GH_REUSABLE_REPO__     — Reusable-workflows repository name
+#   __RUNNER_GROUP_NONPROD__ — Self-hosted runner group for non-prod
+# =============================================================================
+
+name: "Terraform Plan — Dev"
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "infrastructure/dev/**"
+  workflow_dispatch:
+    inputs:
+      databricks:
+        description: "Plan Databricks sub-root instead of main root"
+        type: boolean
+        default: false
+        required: false
+
+# Separate concurrency groups for standard vs Databricks runs to prevent
+# a Databricks plan from blocking a main-root plan (or vice-versa).
+concurrency:
+  group: >-
+    ${{
+      github.event.inputs.databricks == 'true'
+      && format('{0}-dev-databricks', github.repository)
+      || format('{0}-dev', github.repository)
+    }}
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Read GitHub environment variables and compute derived values.
+  # Outputs are passed to the reusable plan workflow in Job 2.
+  # ---------------------------------------------------------------------------
+  get_env_configs:
+    name: "Get Dev Environment Config"
+    runs-on:
+      group: __RUNNER_GROUP_NONPROD__
+    environment: dev
+    outputs:
+      git_folder:        ${{ steps.config.outputs.git_folder }}
+      env_id:            ${{ steps.config.outputs.env_id }}
+      app_name:          ${{ steps.config.outputs.app_name }}
+      tfe_workspace:     ${{ steps.config.outputs.tfe_workspace }}
+      tfe_org:           ${{ steps.config.outputs.tfe_org }}
+      tfe_hostname:      ${{ steps.config.outputs.tfe_hostname }}
+      terraform_version: ${{ steps.config.outputs.terraform_version }}
+      gh_environment:    ${{ steps.config.outputs.gh_environment }}
+
+    steps:
+      - name: Compute config outputs
+        id: config
+        shell: bash
+        run: |
+          GIT_FOLDER="${{ vars.GIT_FOLDER }}"
+          TFE_WORKSPACE="${{ vars.TFE_WORKSPACE }}"
+
+          # Databricks sub-root: append /databricks to path and 1 to workspace name.
+          if [[ "${{ github.event.inputs.databricks }}" == "true" ]]; then
+            GIT_FOLDER="${GIT_FOLDER}/databricks"
+            TFE_WORKSPACE="${TFE_WORKSPACE}1"
+          fi
+
+          echo "git_folder=${GIT_FOLDER}"                          >> "$GITHUB_OUTPUT"
+          echo "env_id=${{ vars.ENV_ID }}"                         >> "$GITHUB_OUTPUT"
+          echo "app_name=${{ vars.APP_NAME }}"                     >> "$GITHUB_OUTPUT"
+          echo "tfe_workspace=${TFE_WORKSPACE}"                    >> "$GITHUB_OUTPUT"
+          echo "tfe_org=${{ vars.TFE_ORG }}"                       >> "$GITHUB_OUTPUT"
+          echo "tfe_hostname=${{ vars.TFE_HOSTNAME }}"             >> "$GITHUB_OUTPUT"
+          echo "terraform_version=${{ vars.TERRAFORM_VERSION }}"   >> "$GITHUB_OUTPUT"
+          echo "gh_environment=${{ vars.GH_ENVIRONMENT }}"         >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Execute Terraform plan via the shared reusable workflow.
+  # ---------------------------------------------------------------------------
+  terraform_plan:
+    name: "Terraform Plan"
+    needs: get_env_configs
+    uses: __GH_ORG__/__GH_REUSABLE_REPO__/.github/workflows/terraform-ngc-plan.yml@main
+    with:
+      git-folder:        ${{ needs.get_env_configs.outputs.git_folder }}
+      env-id:            ${{ needs.get_env_configs.outputs.env_id }}
+      app-name:          ${{ needs.get_env_configs.outputs.app_name }}
+      tfe-workspace:     ${{ needs.get_env_configs.outputs.tfe_workspace }}
+      tfe-org:           ${{ needs.get_env_configs.outputs.tfe_org }}
+      tfe-hostname:      ${{ needs.get_env_configs.outputs.tfe_hostname }}
+      terraform-version: ${{ needs.get_env_configs.outputs.terraform_version }}
+    secrets: inherit

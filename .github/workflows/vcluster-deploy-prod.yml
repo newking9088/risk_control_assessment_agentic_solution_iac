@@ -1,0 +1,59 @@
+# =============================================================================
+# vcluster-deploy-prod.yml — Deploy vCluster for the prod environment.
+#
+# Trigger: manual dispatch only.
+#
+# Prod differences from non-prod:
+#   - Runs on the dedicated prod runner group (__RUNNER_GROUP_PROD__)
+#   - Calls the reusable workflow at @prod ref (pinned production branch)
+#     rather than @main — ensures only validated workflow versions run in prod
+#
+# Placeholders in this file:
+#   __GH_ORG__            — GitHub organisation
+#   __GH_REUSABLE_REPO__  — Reusable-workflows repository name
+#   __RUNNER_GROUP_PROD__ — Self-hosted runner group for prod
+# =============================================================================
+
+name: "vCluster Deploy — Prod"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  get_env_configs:
+    name: "Get Prod Environment Config"
+    runs-on:
+      group: __RUNNER_GROUP_PROD__
+    environment: prod
+    outputs:
+      git_folder:     ${{ steps.config.outputs.git_folder }}
+      env_id:         ${{ steps.config.outputs.env_id }}
+      app_name:       ${{ steps.config.outputs.app_name }}
+      gh_environment: ${{ steps.config.outputs.gh_environment }}
+      vcluster_name:  ${{ steps.config.outputs.vcluster_name }}
+
+    steps:
+      - name: Compute config outputs
+        id: config
+        shell: bash
+        run: |
+          VCLUSTER_NAME=$(echo "${{ vars.APP_NAME }}" | tr '[:upper:]' '[:lower:]')
+
+          echo "git_folder=${{ vars.GIT_FOLDER }}"         >> "$GITHUB_OUTPUT"
+          echo "env_id=${{ vars.ENV_ID }}"                 >> "$GITHUB_OUTPUT"
+          echo "app_name=${{ vars.APP_NAME }}"             >> "$GITHUB_OUTPUT"
+          echo "gh_environment=${{ vars.GH_ENVIRONMENT }}" >> "$GITHUB_OUTPUT"
+          echo "vcluster_name=${VCLUSTER_NAME}"            >> "$GITHUB_OUTPUT"
+
+  deploy_vcluster:
+    name: "Deploy vCluster"
+    needs: get_env_configs
+    # Prod uses @prod ref — a stable, separately reviewed branch of the
+    # reusable workflows repo — rather than @main.
+    uses: __GH_ORG__/__GH_REUSABLE_REPO__/.github/workflows/tool-deploy-vcluster.yml@prod
+    with:
+      vcluster-name:  "vc-${{ needs.get_env_configs.outputs.vcluster_name }}-${{ needs.get_env_configs.outputs.gh_environment }}"
+      git-folder:     ${{ needs.get_env_configs.outputs.git_folder }}
+      env-id:         ${{ needs.get_env_configs.outputs.env_id }}
+      gh-environment: ${{ needs.get_env_configs.outputs.gh_environment }}
+    secrets: inherit

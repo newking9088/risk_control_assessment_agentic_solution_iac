@@ -1,0 +1,150 @@
+# =============================================================================
+# .gitignore — Terraform IaC repository
+# =============================================================================
+
+# =============================================================================
+# Terraform
+# =============================================================================
+
+# Local state — never commit; state is stored remotely in TFE.
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform working directory — created by terraform init.
+.terraform/
+.terraform.lock.hcl
+.terraform.d/
+
+# Saved plan files.
+*.tfplan
+*.tfplan.*
+
+# Backend configuration — may contain credentials or workspace-specific values.
+backend.tf
+backend.hcl
+
+# Crash logs produced by a panicking Terraform binary.
+crash.log
+crash.*.log
+
+# Sentinel policy evaluation artifacts.
+.sentinel
+
+# Override files — used for local development overrides, not for version control.
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# =============================================================================
+# Secrets & Credentials
+# =============================================================================
+
+# Filled placeholder file — NEVER commit with real values.
+# Commit only the empty-value template.
+# placeholders.env is committed as a template; add a filled copy to this list
+# if you ever create one locally.
+placeholders.filled.env
+*.secret
+*.credentials
+
+# =============================================================================
+# IDE — VS Code
+# =============================================================================
+.vscode/
+*.code-workspace
+
+# =============================================================================
+# IDE — Cursor
+# =============================================================================
+.cursor/
+.cursorignore
+
+# =============================================================================
+# IDE — JetBrains (IntelliJ, PyCharm, GoLand, etc.)
+# =============================================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# =============================================================================
+# IDE — Sublime Text
+# =============================================================================
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# IDE — Vim / Neovim
+# =============================================================================
+*.swp
+*.swo
+*~
+.netrwhist
+Session.vim
+
+# =============================================================================
+# IDE — Emacs
+# =============================================================================
+\#*\#
+.\#*
+*.elc
+auto-save-list
+tramp
+
+# =============================================================================
+# IDE — Atom
+# =============================================================================
+.atom/
+
+# =============================================================================
+# IDE — Eclipse
+# =============================================================================
+.project
+.classpath
+.settings/
+.buildpath
+
+# =============================================================================
+# IDE — NetBeans
+# =============================================================================
+nbproject/
+nbbuild/
+nbdist/
+
+# =============================================================================
+# OS — macOS
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# =============================================================================
+# OS — Windows
+# =============================================================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# =============================================================================
+# OS — Linux
+# =============================================================================
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
