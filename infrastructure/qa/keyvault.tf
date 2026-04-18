@@ -79,9 +79,9 @@ module "access_policies_app_keyvault_admins" {
   tenant_id    = var.__ngc.environment_details.system_parameters.TENANT_ID
   object_id    = var.keyvault_admins_app[each.value.admin_name]
 
-  key_permissions         : ["Backup", "Create", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Update"]
-  secret_permissions      : ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
-  certificate_permissions : ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
+  key_permissions         = ["Backup", "Create", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Update"]
+  secret_permissions      = ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
+  certificate_permissions = ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
 }
 
 # Diagnostic Settings — Application Key Vault

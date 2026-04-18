@@ -60,9 +60,9 @@ module "access_policies_byok_keyvault_admins" {
   object_id    = var.keyvault_admins_byok[each.value.admin_name]
 
   # WrapKey / UnwrapKey are required for CMK operations in addition to standard admin rights.
-  key_permissions         : ["Backup", "Create", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Update", "WrapKey", "UnwrapKey"]
-  secret_permissions      : ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
-  certificate_permissions : ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
+  key_permissions         = ["Backup", "Create", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Update", "WrapKey", "UnwrapKey"]
+  secret_permissions      = ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
+  certificate_permissions = ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
 }
 
 # Diagnostic Settings — BYOK Key Vault

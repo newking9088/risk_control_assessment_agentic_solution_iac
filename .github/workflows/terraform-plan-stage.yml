@@ -1,4 +1,4 @@
-name: "Terraform Plan — Stage"
+name: "Terraform Plan â€” Stage"
 
 on:
   pull_request:

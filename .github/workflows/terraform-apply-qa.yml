@@ -1,4 +1,4 @@
-name: "Terraform Apply — QA"
+name: "Terraform Apply â€” QA"
 
 on:
   workflow_dispatch:

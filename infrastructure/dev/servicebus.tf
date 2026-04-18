@@ -44,9 +44,9 @@ module "access_policies_byok_service_bus" {
   tenant_id    = var.__ngc.environment_details.system_parameters.TENANT_ID
   object_id    = module.user_assigned_identity_service_bus[each.value.identity_key].principal_id
 
-  key_permissions         : ["Get", "WrapKey", "UnwrapKey"]
-  secret_permissions      : []
-  certificate_permissions : []
+  key_permissions         = ["Get", "WrapKey", "UnwrapKey"]
+  secret_permissions      = []
+  certificate_permissions = []
 }
 
 # Time Sleep — Service Bus

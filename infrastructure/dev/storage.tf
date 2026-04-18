@@ -48,9 +48,9 @@ module "access_policies_byok_storage" {
   tenant_id    = var.__ngc.environment_details.system_parameters.TENANT_ID
   object_id    = module.user_assigned_identity_storage[each.value.identity_key].principal_id
 
-  key_permissions         : ["Get", "WrapKey", "UnwrapKey"]
-  secret_permissions      : []
-  certificate_permissions : []
+  key_permissions         = ["Get", "WrapKey", "UnwrapKey"]
+  secret_permissions      = []
+  certificate_permissions = []
 }
 
 # Storage Account

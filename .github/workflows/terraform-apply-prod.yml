@@ -1,4 +1,4 @@
-name: "Terraform Apply — Prod"
+name: "Terraform Apply â€” Prod"
 
 on:
   workflow_dispatch:

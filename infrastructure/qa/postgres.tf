@@ -46,9 +46,9 @@ module "access_policies_byok_postgres" {
   tenant_id    = var.__ngc.environment_details.system_parameters.TENANT_ID
   object_id    = module.user_assigned_identity_postgres[each.value.identity_key].principal_id
 
-  key_permissions         : ["Get", "WrapKey", "UnwrapKey"]
-  secret_permissions      : []
-  certificate_permissions : []
+  key_permissions         = ["Get", "WrapKey", "UnwrapKey"]
+  secret_permissions      = []
+  certificate_permissions = []
 }
 
 # Time Sleep — PostgreSQL
