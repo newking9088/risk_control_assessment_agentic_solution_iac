@@ -1,4 +1,8 @@
-# Base Infrastructure Template
+# Risk Control Assessment Agentic Solution — Base Infrastructure
+
+> **Template repo.** To spin up a new product repo — click "Use this template"
+> → create your product repo → follow `docs/GETTING_STARTED.md`.
+> See `docs/MULTI_PRODUCT.md` for the recommended layout at 36+ products.
 
 Modular Azure Infrastructure-as-Code using Terraform Enterprise modules. Every optional resource is gated by a feature switch — Key Vault is the only mandatory resource. All other modules are enabled per environment via `config.auto.tfvars`.
 
