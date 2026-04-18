@@ -1,22 +1,4 @@
-# =============================================================================
-# terraform-plan-prod.yml — Terraform plan for the prod environment.
-#
-# Triggers:
-#   - Pull request to main (when infrastructure/prod/** files change)
-#   - Manual dispatch (with optional databricks flag)
-#
-# Prod differences from non-prod:
-#   - Runs on the dedicated prod runner group (__RUNNER_GROUP_PROD__)
-#   - Uses the "prod" GitHub environment (requires approval for apply)
-#   - Plans are non-destructive but still gated by the prod runner pool
-#
-# Placeholders in this file:
-#   __GH_ORG__            — GitHub organisation
-#   __GH_REUSABLE_REPO__  — Reusable-workflows repository name
-#   __RUNNER_GROUP_PROD__ — Self-hosted runner group for prod
-# =============================================================================
-
-name: "Terraform Plan — Prod"
+name: "Terraform Plan � Prod"
 
 on:
   pull_request:
@@ -43,9 +25,8 @@ concurrency:
 jobs:
   get_env_configs:
     name: "Get Prod Environment Config"
-    # Prod plans run on the dedicated prod runner pool — never the non-prod pool.
     runs-on:
-      group: __RUNNER_GROUP_PROD__
+      group: ${{ vars.RUNNER_GROUP }}
     environment: prod
     outputs:
       git_folder:        ${{ steps.config.outputs.git_folder }}
@@ -66,14 +47,14 @@ jobs:
           TFE_WORKSPACE="${{ vars.TFE_WORKSPACE }}"
 
           if [[ "${{ github.event.inputs.databricks }}" == "true" ]]; then
-            GIT_FOLDER="${GIT_FOLDER}/databricks"
-            TFE_WORKSPACE="${TFE_WORKSPACE}1"
+            GIT_FOLDER="${{GIT_FOLDER}}/databricks"
+            TFE_WORKSPACE="${{TFE_WORKSPACE}}1"
           fi
 
-          echo "git_folder=${GIT_FOLDER}"                          >> "$GITHUB_OUTPUT"
+          echo "git_folder=${{GIT_FOLDER}}"                          >> "$GITHUB_OUTPUT"
           echo "env_id=${{ vars.ENV_ID }}"                         >> "$GITHUB_OUTPUT"
           echo "app_name=${{ vars.APP_NAME }}"                     >> "$GITHUB_OUTPUT"
-          echo "tfe_workspace=${TFE_WORKSPACE}"                    >> "$GITHUB_OUTPUT"
+          echo "tfe_workspace=${{TFE_WORKSPACE}}"                    >> "$GITHUB_OUTPUT"
           echo "tfe_org=${{ vars.TFE_ORG }}"                       >> "$GITHUB_OUTPUT"
           echo "tfe_hostname=${{ vars.TFE_HOSTNAME }}"             >> "$GITHUB_OUTPUT"
           echo "terraform_version=${{ vars.TERRAFORM_VERSION }}"   >> "$GITHUB_OUTPUT"
@@ -82,7 +63,7 @@ jobs:
   terraform_plan:
     name: "Terraform Plan"
     needs: get_env_configs
-    uses: __GH_ORG__/__GH_REUSABLE_REPO__/.github/workflows/terraform-ngc-plan.yml@main
+    uses: ${{ vars.GH_ORG }}/${{ vars.REUSABLE_WORKFLOWS_REPO }}/.github/workflows/terraform-ngc-plan.yml@main
     with:
       git-folder:        ${{ needs.get_env_configs.outputs.git_folder }}
       env-id:            ${{ needs.get_env_configs.outputs.env_id }}
