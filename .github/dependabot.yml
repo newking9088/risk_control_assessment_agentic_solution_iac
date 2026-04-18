@@ -1,0 +1,50 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: terraform
+    directory: /infrastructure/dev
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - terraform
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: terraform
+    directory: /infrastructure/qa
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - terraform
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: terraform
+    directory: /infrastructure/stage
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - terraform
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: terraform
+    directory: /infrastructure/prod
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - terraform
+    open-pull-requests-limit: 5

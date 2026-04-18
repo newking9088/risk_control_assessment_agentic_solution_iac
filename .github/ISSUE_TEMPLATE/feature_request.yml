@@ -1,0 +1,40 @@
+name: Feature / Module Request
+description: Propose a new module or an enhancement to an existing one.
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to provision or deploy?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: >
+        Sketch the module name, flag name in `enabled_modules`, and outputs.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Affected environments
+      multiple: true
+      options: [dev, qa, stage, prod, all]
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Security / compliance considerations
+      description: New network exposure? New secrets? IAM implications? CMK required?
