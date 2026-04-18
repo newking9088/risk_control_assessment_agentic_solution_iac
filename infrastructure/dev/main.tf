@@ -52,6 +52,9 @@ locals {
 # Data Sources
 # =============================================================================
 
+# Current Azure client context — exposes tenant_id and object_id at plan time.
+data "azurerm_client_config" "current" {}
+
 # The environment resource group that all resources in this root are deployed into.
 data "azurerm_resource_group" "app_env_resource_group" {
   name = var.__ngc.environment_resource_groups
