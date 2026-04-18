@@ -1,5 +1,5 @@
 # =============================================================================
-# vcluster-deploy-stage.yml — Deploy vCluster for the stage environment.
+# cluster-deploy-qa.yml — Deploy vCluster for the QA environment.
 #
 # Trigger: manual dispatch only.
 #
@@ -9,17 +9,17 @@
 #   __RUNNER_GROUP_NONPROD__ — Self-hosted runner group for non-prod
 # =============================================================================
 
-name: "vCluster Deploy — Stage"
+name: "Deploy_vCluster_QA"
 
 on:
   workflow_dispatch:
 
 jobs:
   get_env_configs:
-    name: "Get Stage Environment Config"
+    name: "Get QA Environment Config"
     runs-on:
       group: __RUNNER_GROUP_NONPROD__
-    environment: stage
+    environment: qa
     outputs:
       git_folder:     ${{ steps.config.outputs.git_folder }}
       env_id:         ${{ steps.config.outputs.env_id }}

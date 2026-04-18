@@ -1,7 +1,8 @@
 # =============================================================================
-# vcluster-deploy-qa.yml — Deploy vCluster for the QA environment.
+# cluster-deploy-dev.yml — Deploy vCluster for the dev environment.
 #
 # Trigger: manual dispatch only.
+# vCluster name format: vc-<app_name_lowercase>-<gh_environment>
 #
 # Placeholders in this file:
 #   __GH_ORG__               — GitHub organisation
@@ -9,29 +10,30 @@
 #   __RUNNER_GROUP_NONPROD__ — Self-hosted runner group for non-prod
 # =============================================================================
 
-name: "vCluster Deploy — QA"
+name: "Deploy_vCluster_Dev"
 
 on:
   workflow_dispatch:
 
 jobs:
   get_env_configs:
-    name: "Get QA Environment Config"
+    name: "Get Dev Environment Config"
     runs-on:
       group: __RUNNER_GROUP_NONPROD__
-    environment: qa
+    environment: dev
     outputs:
-      git_folder:     ${{ steps.config.outputs.git_folder }}
-      env_id:         ${{ steps.config.outputs.env_id }}
-      app_name:       ${{ steps.config.outputs.app_name }}
+      git_folder:    ${{ steps.config.outputs.git_folder }}
+      env_id:        ${{ steps.config.outputs.env_id }}
+      app_name:      ${{ steps.config.outputs.app_name }}
       gh_environment: ${{ steps.config.outputs.gh_environment }}
-      vcluster_name:  ${{ steps.config.outputs.vcluster_name }}
+      vcluster_name: ${{ steps.config.outputs.vcluster_name }}
 
     steps:
       - name: Compute config outputs
         id: config
         shell: bash
         run: |
+          # vCluster name is lowercased APP_NAME to comply with k8s naming rules.
           VCLUSTER_NAME=$(echo "${{ vars.APP_NAME }}" | tr '[:upper:]' '[:lower:]')
 
           echo "git_folder=${{ vars.GIT_FOLDER }}"         >> "$GITHUB_OUTPUT"
@@ -45,8 +47,8 @@ jobs:
     needs: get_env_configs
     uses: __GH_ORG__/__GH_REUSABLE_REPO__/.github/workflows/tool-deploy-vcluster.yml@main
     with:
-      vcluster-name:  "vc-${{ needs.get_env_configs.outputs.vcluster_name }}-${{ needs.get_env_configs.outputs.gh_environment }}"
-      git-folder:     ${{ needs.get_env_configs.outputs.git_folder }}
-      env-id:         ${{ needs.get_env_configs.outputs.env_id }}
+      vcluster-name: "vc-${{ needs.get_env_configs.outputs.vcluster_name }}-${{ needs.get_env_configs.outputs.gh_environment }}"
+      git-folder:    ${{ needs.get_env_configs.outputs.git_folder }}
+      env-id:        ${{ needs.get_env_configs.outputs.env_id }}
       gh-environment: ${{ needs.get_env_configs.outputs.gh_environment }}
     secrets: inherit
