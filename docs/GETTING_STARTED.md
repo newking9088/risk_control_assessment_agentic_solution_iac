@@ -26,6 +26,13 @@ Stand up a dev environment from a fresh clone in roughly 10 minutes.
 5. In the GitHub UI, create four Environments (`dev`, `qa`, `stage`,
    `prod`) and set the variables and secrets below on each.
 
+> **Note — `var.__ngc`:** This variable (naming service, tags, subnets,
+> resource groups) is injected automatically by Terraform Enterprise at
+> plan/apply time. It is owned by the NGC platform team and you never set
+> it yourself. If you are running outside TFE, ask your platform team to
+> provision a workspace for your product — they will attach the correct
+> `__ngc` workspace variable.
+
 ---
 
 ## Required GitHub Environment configuration (per env)
