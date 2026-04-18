@@ -1,87 +1,55 @@
-# =============================================================================
-# config.auto.tfvars — QA environment configuration.
-#
-# This is the ONLY file that differs between dev / qa / stage / prod.
-# All .tf files in this directory are identical across environments.
-#
-# QA shares the non-prod Azure subscription with dev and stage.
-#
-# Placeholder replacement (run from repo root after filling placeholders.env):
-#   bash scripts/replace_placeholders.sh
-#
-# Manual single-value replacement:
-#   sed -i 's|__NONPROD_AKS_SUBNET_ID__|/subscriptions/.../subnets/aks|g' \
-#     infrastructure/qa/config.auto.tfvars
-# =============================================================================
+# Edit this file (and databricks/config.auto.tfvars) to onboard a new environment.
+# Nothing else under infrastructure/dev/ should need changes.
+
+# — Terraform Enterprise registry (where the modules live) —
+tfe_hostname = "west.tfe.nginternal.com"
+tfe_org      = "platform"
+
+# — Azure identity used by Terraform & AKS —
+spn_object_id       = "143363ce-d4c5-4c0d-b3d9-84d5c252bc97"
+aks_spn_object_id   = "e272c41e-0ecf-4e75-98fd-d290fd2d3bc1"
+org_public_ip_cidrs = ["155.201.0.0/16"]
+
+# — AKS subnet ARM path (non-prod: shared by dev, qa, stage) —
+aks_subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-network-nonprod/providers/Microsoft.Network/virtualNetworks/vnet-nonprod/subnets/snet-aks"
 
 database_name = "appdb"
 
-# =============================================================================
-# Feature Switches
-# =============================================================================
+# — Module on/off switches — all default to disabled; enable incrementally —
 enabled_modules = {
-  byok               : false
-  diagnostic_logging : false
+  byok               = false
+  diagnostic_logging = false
 
-  storage_account : false
+  storage_account = false
 
-  redis_cache  : false
-  # Subnet key string from __ngc.subnets — required when redis_cache = true.
-  # Example: "redis-subnet"
-  redis_subnet : null
+  redis_cache  = false
+  redis_subnet = null
 
-  cognitive_account : false
-  # Subnet key string from __ngc.subnets — required when cognitive_account = true.
-  cognitive_subnet  : null
+  cognitive_account = false
+  cognitive_subnet  = null
 
-  service_bus    : false
-  search_service : false
+  service_bus    = false
+  search_service = false
 
-  postgres        : false
-  # Subnet key string from __ngc.subnets — required when postgres = true.
-  postgres_subnet : null
+  postgres        = false
+  postgres_subnet = null
 
-  databricks                         : false
-  databricks_private_subnet          : null
-  databricks_public_subnet           : null
-  databricks_private_endpoint_subnet : null
+  databricks                         = false
+  databricks_private_subnet          = null
+  databricks_public_subnet           = null
+  databricks_private_endpoint_subnet = null
 
-  data_factory        : false
-  # Subnet key string from __ngc.subnets — required when data_factory = true.
-  data_factory_subnet : null
+  data_factory        = false
+  data_factory_subnet = null
 
-  synapse : false
+  synapse = false
 }
 
-# =============================================================================
-# Key Vault Admins
-# =============================================================================
+# — Single admin (clone, then add your team) —
 keyvault_admins_app = {
-  __KEYVAULT_ADMIN_1_NAME__ : "__KEYVAULT_ADMIN_1_OBJECT_ID__"
-  __KEYVAULT_ADMIN_2_NAME__ : "__KEYVAULT_ADMIN_2_OBJECT_ID__"
+  raj_paudel = "00000000-0000-0000-0000-000000000002"
 }
 
 keyvault_admins_byok = {
-  __KEYVAULT_ADMIN_1_NAME__ : "__KEYVAULT_ADMIN_1_OBJECT_ID__"
-  __KEYVAULT_ADMIN_2_NAME__ : "__KEYVAULT_ADMIN_2_OBJECT_ID__"
+  raj_paudel = "00000000-0000-0000-0000-000000000002"
 }
-
-# =============================================================================
-# Networking
-# =============================================================================
-# Non-prod AKS subnet — shared by dev, qa, and stage.
-aks_subnet_id = "__NONPROD_AKS_SUBNET_ID__"
-
-# =============================================================================
-# Optional Overrides
-# =============================================================================
-# platform_admins = {
-#   platform_admins : "__PLATFORM_ADMINS_OBJECT_ID__"
-# }
-
-# synapse_users = {
-#   admin : {
-#     role_name    : "Synapse Administrator"
-#     principal_id : "__PLATFORM_ADMINS_OBJECT_ID__"
-#   }
-# }
