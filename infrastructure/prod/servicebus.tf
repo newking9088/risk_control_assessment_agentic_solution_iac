@@ -1,4 +1,3 @@
-# =============================================================================
 # servicebus.tf — Azure Service Bus namespace (Premium SKU, zone-redundant, CMK).
 #
 # BYOK dependency chain (Section 3.5):
@@ -13,16 +12,12 @@
 # Only deployed when: enabled_modules.service_bus = true
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__       — Terraform Enterprise registry hostname
-#   __TFE_ORG__            — Terraform Enterprise organization
-#   __ORG_PUBLIC_IP_CIDR__ — Org egress CIDR, e.g. 203.0.113.0/24
-# =============================================================================
+#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
+#   platform            — Terraform Enterprise organization
 
-# =============================================================================
 # User-Assigned Managed Identity — Service Bus
-# =============================================================================
 module "user_assigned_identity_service_bus" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/user-assigned-identity/azurerm"
+  source  = "west.tfe.nginternal.com/platform/user-assigned-identity/azurerm"
   version = "4.1.0-3-1.7"
 
   for_each = var.enabled_modules.service_bus ? toset(["service_bus"]) : toset([])
@@ -33,11 +28,9 @@ module "user_assigned_identity_service_bus" {
   tags                = local.tags
 }
 
-# =============================================================================
 # BYOK Access Policy — Service Bus Identity
-# =============================================================================
 module "access_policies_byok_service_bus" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-access-policy/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-access-policy/azurerm"
   version = "12.0.0-3-1.7"
 
   for_each = {
@@ -57,11 +50,9 @@ module "access_policies_byok_service_bus" {
   certificate_permissions : []
 }
 
-# =============================================================================
 # Time Sleep — Service Bus
-# =============================================================================
 module "time_sleep_service_bus" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/time-sleep/time"
+  source  = "west.tfe.nginternal.com/platform/time-sleep/time"
   version = "2.0.0-3-1.7"
 
   for_each        = var.enabled_modules.service_bus ? toset(["service_bus"]) : toset([])
@@ -70,11 +61,9 @@ module "time_sleep_service_bus" {
   depends_on = [module.access_policies_byok_service_bus]
 }
 
-# =============================================================================
 # Service Bus Namespace
-# =============================================================================
 module "service_bus" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/servicebus-namespace/azurerm"
+  source  = "west.tfe.nginternal.com/platform/servicebus-namespace/azurerm"
   version = "12.0.0-3-1.7"
 
   for_each = var.enabled_modules.service_bus ? toset(["app_service_bus"]) : toset([])
@@ -101,7 +90,7 @@ module "service_bus" {
   network_rule_set = {
     default_action                : "Deny"
     trusted_services_allowed      : true
-    ip_rules                      : ["__ORG_PUBLIC_IP_CIDR__"]
+    ip_rules                      : var.org_public_ip_cidrs
   }
 
   # Infrastructure encryption provides a second layer of encryption at rest
@@ -124,11 +113,9 @@ module "service_bus" {
   depends_on = [module.time_sleep_service_bus]
 }
 
-# =============================================================================
 # Service Bus Queues
-# =============================================================================
 module "service_bus_queues" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/servicebus-queue/azurerm"
+  source  = "west.tfe.nginternal.com/platform/servicebus-queue/azurerm"
   version = "10.0.0-3-1.7"
 
   for_each = module.service_bus
@@ -150,11 +137,9 @@ module "service_bus_queues" {
   enable_batched_operations = true
 }
 
-# =============================================================================
 # Diagnostic Settings — Service Bus
-# =============================================================================
 module "diagnostic_settings_service_bus" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/monitor-diagnostic-setting/azurerm"
+  source  = "west.tfe.nginternal.com/platform/monitor-diagnostic-setting/azurerm"
   version = "4.1.1-3-1.7"
 
   for_each = var.enabled_modules.diagnostic_logging ? module.service_bus : {}
@@ -172,11 +157,9 @@ module "diagnostic_settings_service_bus" {
   ]
 }
 
-# =============================================================================
 # Key Vault Secrets — Service Bus
-# =============================================================================
 module "key_vault_secrets_service_bus" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.service_bus
@@ -202,9 +185,7 @@ module "key_vault_secrets_service_bus" {
   }
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_service_bus" {
   description = "Service Bus outputs."
   value = {

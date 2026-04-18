@@ -1,4 +1,3 @@
-# =============================================================================
 # redis.tf — Azure Cache for Redis (Standard SKU, SSL-only, private endpoint).
 #
 # No BYOK encryption on Redis — CMK is not supported for the Standard SKU.
@@ -14,21 +13,12 @@
 # Private endpoint also requires: enabled_modules.redis_subnet (subnet key string)
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__           — Terraform Enterprise registry hostname
-#   __TFE_ORG__                — Terraform Enterprise organization
-#   __ORG_PUBLIC_IP_START__    — First IP of org public range
-#   __ORG_PUBLIC_IP_END__      — Last IP of org public range
-#   __ORG_INTERNAL_IP_START__  — First IP of org internal (RFC1918) range
-#   __ORG_INTERNAL_IP_END__    — Last IP of org internal range
-#   __AKS_IP_START__           — First IP of AKS node pool subnet
-#   __AKS_IP_END__             — Last IP of AKS node pool subnet
-# =============================================================================
+#   west.tfe.nginternal.com           — Terraform Enterprise registry hostname
+#   platform                — Terraform Enterprise organization
 
-# =============================================================================
 # Redis Cache
-# =============================================================================
 module "redis_cache" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/redis-cache/azurerm"
+  source  = "west.tfe.nginternal.com/platform/redis-cache/azurerm"
   version = "10.4.1-3-1.7"
 
   for_each = var.enabled_modules.redis_cache ? toset(["app_redis"]) : toset([])
@@ -54,27 +44,25 @@ module "redis_cache" {
   # Format: name => { start_ip, end_ip }
   redis_firewall_rules = {
     aks_nodes : {
-      start_ip : "__AKS_IP_START__"
-      end_ip   : "__AKS_IP_END__"
+      start_ip : "10.200.0.0"
+      end_ip   : "10.200.255.255"
     }
     org_public : {
-      start_ip : "__ORG_PUBLIC_IP_START__"
-      end_ip   : "__ORG_PUBLIC_IP_END__"
+      start_ip : "155.201.0.0"
+      end_ip   : "155.201.255.255"
     }
     org_internal : {
-      start_ip : "__ORG_INTERNAL_IP_START__"
-      end_ip   : "__ORG_INTERNAL_IP_END__"
+      start_ip : "10.225.0.0"
+      end_ip   : "10.225.255.255"
     }
   }
 
   tags = local.tags
 }
 
-# =============================================================================
 # Private Endpoint — Redis
-# =============================================================================
 module "private_endpoints_redis" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/private-endpoint/azurerm"
+  source  = "west.tfe.nginternal.com/platform/private-endpoint/azurerm"
   version = "5.1.1-3-1.7"
 
   for_each = module.redis_cache
@@ -89,11 +77,9 @@ module "private_endpoints_redis" {
   tags                           = local.tags
 }
 
-# =============================================================================
 # Diagnostic Settings — Redis
-# =============================================================================
 module "diagnostic_settings_redis" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/monitor-diagnostic-setting/azurerm"
+  source  = "west.tfe.nginternal.com/platform/monitor-diagnostic-setting/azurerm"
   version = "4.1.1-3-1.7"
 
   for_each = var.enabled_modules.diagnostic_logging ? module.redis_cache : {}
@@ -108,11 +94,9 @@ module "diagnostic_settings_redis" {
   ]
 }
 
-# =============================================================================
 # Key Vault Secrets — Redis
-# =============================================================================
 module "key_vault_secrets_redis" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.redis_cache
@@ -146,9 +130,7 @@ module "key_vault_secrets_redis" {
   }
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_redis" {
   description = "Redis Cache outputs."
   value = {

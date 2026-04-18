@@ -1,13 +1,9 @@
-# =============================================================================
 # main.tf — Locals, resource group data source, and subnet lookups.
 #
 # This file wires the NGC platform context (__ngc) into usable locals
 # that every other module in this root references.
-# =============================================================================
 
-# =============================================================================
 # Locals
-# =============================================================================
 locals {
   # ── Tags ────────────────────────────────────────────────────────────────────
   # All tags flow from the NGC platform variable to satisfy compliance policy.
@@ -48,9 +44,7 @@ locals {
   }
 }
 
-# =============================================================================
 # Data Sources
-# =============================================================================
 
 # Current Azure client context — exposes tenant_id and object_id at plan time.
 data "azurerm_client_config" "current" {}

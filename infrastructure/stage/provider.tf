@@ -1,9 +1,7 @@
-# =============================================================================
 # provider.tf — Terraform core settings and AzureRM provider configuration.
 #
 # All environments (dev / qa / stage / prod) use this identical file.
 # Environment differences live exclusively in config.auto.tfvars.
-# =============================================================================
 
 terraform {
   required_providers {

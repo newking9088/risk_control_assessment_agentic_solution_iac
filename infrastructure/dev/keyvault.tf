@@ -1,4 +1,3 @@
-# =============================================================================
 # keyvault.tf — Application Key Vault (MANDATORY).
 #
 # This vault is always deployed regardless of enabled_modules.
@@ -6,18 +5,12 @@
 # strings and keys here via the key-vault-secret module.
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__       — Terraform Enterprise registry hostname
-#   __TFE_ORG__            — Terraform Enterprise organization
-#   __SPM_OBJECT_ID__      — Deployment service principal Azure AD object ID
-#   __AKS_SPM_OBJECT_ID__  — AKS cluster service principal Azure AD object ID
-#   __ORG_PUBLIC_IP_CIDR__ — Org egress CIDR, e.g. 203.0.113.0/24
-# =============================================================================
+#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
+#   platform            — Terraform Enterprise organization
 
-# =============================================================================
 # Application Key Vault
-# =============================================================================
 module "keyvault" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault/azurerm"
   version = "12.0.3-3-1.7"
 
   # Mandatory module — always create exactly one vault instance.
@@ -39,7 +32,7 @@ module "keyvault" {
     bypass         : "AzureServices"
     default_action : "Deny"
     # Allow org egress traffic and AKS nodes to reach the vault.
-    ip_rules                   : ["__ORG_PUBLIC_IP_CIDR__"]
+    ip_rules                   : var.org_public_ip_cidrs
     virtual_network_subnet_ids : [var.aks_subnet_id]
   }
 
@@ -49,14 +42,14 @@ module "keyvault" {
   access_policies = [
     {
       # Deployment SPM: full permissions required for CI/CD secret writes.
-      object_id               : "__SPM_OBJECT_ID__"
+      object_id               : var.spn_object_id
       key_permissions         : ["Backup", "Create", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Update"]
       secret_permissions      : ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
       certificate_permissions : ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
     },
     {
       # AKS SPM: read-only at pod runtime via CSI secrets driver.
-      object_id               : "__AKS_SPM_OBJECT_ID__"
+      object_id               : var.aks_spn_object_id
       key_permissions         : ["Backup", "Create", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Update"]
       secret_permissions      : ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
       certificate_permissions : ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
@@ -66,13 +59,11 @@ module "keyvault" {
   tags = local.tags
 }
 
-# =============================================================================
 # Application Key Vault — Admin Access Policies
-# =============================================================================
 # Creates one access policy per admin per vault instance.
 # Admin entries come from var.keyvault_admins_app (set in config.auto.tfvars).
 module "access_policies_app_keyvault_admins" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-access-policy/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-access-policy/azurerm"
   version = "12.0.0-3-1.7"
 
   # Cross-product of admin names and vault keys (only one vault, but kept
@@ -94,11 +85,9 @@ module "access_policies_app_keyvault_admins" {
   certificate_permissions : ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
 }
 
-# =============================================================================
 # Diagnostic Settings — Application Key Vault
-# =============================================================================
 module "diagnostic_settings_app_keyvault" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/monitor-diagnostic-setting/azurerm"
+  source  = "west.tfe.nginternal.com/platform/monitor-diagnostic-setting/azurerm"
   version = "4.1.1-3-1.7"
 
   # Only created when diagnostic_logging is enabled.
@@ -114,9 +103,7 @@ module "diagnostic_settings_app_keyvault" {
   ]
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_keyvault" {
   description = "Application Key Vault outputs."
   value = {

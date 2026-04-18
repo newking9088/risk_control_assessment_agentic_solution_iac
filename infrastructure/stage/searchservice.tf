@@ -1,4 +1,3 @@
-# =============================================================================
 # searchservice.tf — Azure Cognitive Search (Standard SKU).
 #
 # No BYOK, no private endpoint, no diagnostic settings for this module.
@@ -11,16 +10,12 @@
 # Only deployed when: enabled_modules.search_service = true
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__       — Terraform Enterprise registry hostname
-#   __TFE_ORG__            — Terraform Enterprise organization
-#   __ORG_PUBLIC_IP_CIDR__ — Org egress CIDR, e.g. 203.0.113.0/24
-# =============================================================================
+#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
+#   platform            — Terraform Enterprise organization
 
-# =============================================================================
 # Cognitive Search Service
-# =============================================================================
 module "search_service" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/searchservice/azurerm"
+  source  = "west.tfe.nginternal.com/platform/searchservice/azurerm"
   version = "10.1.1-3-1.7"
 
   for_each = var.enabled_modules.search_service ? toset(["app_search"]) : toset([])
@@ -34,16 +29,14 @@ module "search_service" {
   partition_count = 1
 
   # Restrict inbound access to org egress IPs only.
-  allowed_ips = ["__ORG_PUBLIC_IP_CIDR__"]
+  allowed_ips = var.org_public_ip_cidrs
 
   tags = local.tags
 }
 
-# =============================================================================
 # Key Vault Secrets — Cognitive Search
-# =============================================================================
 module "key_vault_secrets_search" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.search_service
@@ -69,9 +62,7 @@ module "key_vault_secrets_search" {
   }
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_search_service" {
   description = "Cognitive Search Service outputs."
   value = {

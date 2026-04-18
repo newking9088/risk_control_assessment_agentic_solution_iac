@@ -1,4 +1,3 @@
-# =============================================================================
 # databricks.tf — Azure Databricks Workspace (infrastructure encryption + CMK).
 #
 # Databricks manages its own private endpoint subnet internally — no separate
@@ -18,15 +17,12 @@
 #   enabled_modules.databricks_private_endpoint_subnet — private endpoint subnet key
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__ — Terraform Enterprise registry hostname
-#   __TFE_ORG__      — Terraform Enterprise organization
-# =============================================================================
+#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
+#   platform      — Terraform Enterprise organization
 
-# =============================================================================
 # Databricks Workspace
-# =============================================================================
 module "databricks_workspace" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/databricks-workspaces/azurerm"
+  source  = "west.tfe.nginternal.com/platform/databricks-workspaces/azurerm"
   version = "12.1.1-3-1.7"
 
   for_each = var.enabled_modules.databricks ? toset(["app_databricks"]) : toset([])
@@ -64,11 +60,9 @@ module "databricks_workspace" {
   tags = local.tags
 }
 
-# =============================================================================
 # Key Vault Secrets — Databricks
-# =============================================================================
 module "key_vault_secrets_databricks" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.databricks_workspace
@@ -96,9 +90,7 @@ module "key_vault_secrets_databricks" {
   }
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_databricks" {
   description = "Databricks Workspace outputs."
   value = {

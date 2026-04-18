@@ -1,4 +1,3 @@
-# =============================================================================
 # synapse.tf — Azure Synapse Analytics (workspace + SQL pool + Spark pool).
 #
 # Dependency chain:
@@ -15,54 +14,39 @@
 # Only deployed when: enabled_modules.synapse = true
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__                   — Terraform Enterprise registry hostname
-#   __TFE_ORG__                        — Terraform Enterprise organization
-#   __SYNAPSE_INDIA_WEST_IP_START__    — First IP of India West access range
-#   __SYNAPSE_INDIA_WEST_IP_END__      — Last IP of India West access range
-#   __SYNAPSE_US_WEST_IP_START__       — First IP of US West access range
-#   __SYNAPSE_US_WEST_IP_END__         — Last IP of US West access range
-#   __SYNAPSE_US_CENTRAL_IP_START__    — First IP of US Central access range
-#   __SYNAPSE_US_CENTRAL_IP_END__      — Last IP of US Central access range
-#   __AKS_IP_START__                   — First IP of AKS node pool subnet
-#   __AKS_IP_END__                     — Last IP of AKS node pool subnet
-#   __ORG_PUBLIC_IP_START__            — First IP of org public range
-#   __ORG_PUBLIC_IP_END__              — Last IP of org public range
-# =============================================================================
+#   west.tfe.nginternal.com                   — Terraform Enterprise registry hostname
+#   platform                        — Terraform Enterprise organization
 
-# =============================================================================
 # Locals — Synapse Firewall Rules
-# =============================================================================
 # Grouped by region so new ranges can be added without touching the workspace block.
 locals {
   synapse_firewall_rules = var.enabled_modules.synapse ? {
     aks_nodes : {
-      start_ip_address : "__AKS_IP_START__"
-      end_ip_address   : "__AKS_IP_END__"
+      start_ip_address : "10.200.0.0"
+      end_ip_address   : "10.200.255.255"
     }
     org_public : {
-      start_ip_address : "__ORG_PUBLIC_IP_START__"
-      end_ip_address   : "__ORG_PUBLIC_IP_END__"
+      start_ip_address : "155.201.0.0"
+      end_ip_address   : "155.201.255.255"
     }
     india_west : {
-      start_ip_address : "__SYNAPSE_INDIA_WEST_IP_START__"
-      end_ip_address   : "__SYNAPSE_INDIA_WEST_IP_END__"
+      start_ip_address : "104.44.91.32"
+      end_ip_address   : "104.44.91.63"
     }
     us_west : {
-      start_ip_address : "__SYNAPSE_US_WEST_IP_START__"
-      end_ip_address   : "__SYNAPSE_US_WEST_IP_END__"
+      start_ip_address : "13.66.145.96"
+      end_ip_address   : "13.66.145.127"
     }
     us_central : {
-      start_ip_address : "__SYNAPSE_US_CENTRAL_IP_START__"
-      end_ip_address   : "__SYNAPSE_US_CENTRAL_IP_END__"
+      start_ip_address : "13.89.174.0"
+      end_ip_address   : "13.89.174.31"
     }
   } : {}
 }
 
-# =============================================================================
 # Random Password — Synapse SQL Admin
-# =============================================================================
 module "sql_server_random_passwords" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/random-password/random"
+  source  = "west.tfe.nginternal.com/platform/random-password/random"
   version = "3.0.0-3-1.7"
 
   for_each = var.enabled_modules.synapse ? toset(["synapse_admin"]) : toset([])
@@ -74,11 +58,9 @@ module "sql_server_random_passwords" {
   min_special = 4
 }
 
-# =============================================================================
 # Synapse Analytics Workspace
-# =============================================================================
 module "synapse_workspace" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/synapse-workspace/azurerm"
+  source  = "west.tfe.nginternal.com/platform/synapse-workspace/azurerm"
   version = "5.0.3-3-1.7"
 
   for_each = var.enabled_modules.synapse ? toset(["app_synapse"]) : toset([])
@@ -108,11 +90,9 @@ module "synapse_workspace" {
   depends_on = [module.sql_server_random_passwords]
 }
 
-# =============================================================================
 # Synapse SQL Dedicated Pool
-# =============================================================================
 module "synapse_sql_pool" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/synapse-sql-pool/azurerm"
+  source  = "west.tfe.nginternal.com/platform/synapse-sql-pool/azurerm"
   version = "3.1.0-3-1.7"
 
   for_each = module.synapse_workspace
@@ -129,13 +109,11 @@ module "synapse_sql_pool" {
   tags = local.tags
 }
 
-# =============================================================================
 # Synapse Spark Pool
-# =============================================================================
 # Named "synapse_sql_post" per module inventory — uses the pool module v5.1.1
 # which supports Apache Spark configuration.
 module "synapse_sql_post" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/synapse-sql-pool/azurerm"
+  source  = "west.tfe.nginternal.com/platform/synapse-sql-pool/azurerm"
   version = "5.1.1-3-1.7"
 
   for_each = module.synapse_workspace
@@ -161,11 +139,9 @@ module "synapse_sql_post" {
   tags = local.tags
 }
 
-# =============================================================================
 # Synapse Role Assignments
-# =============================================================================
 module "synapse_role_assignment" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/synapse-role-assignment/azurerm"
+  source  = "west.tfe.nginternal.com/platform/synapse-role-assignment/azurerm"
   version = "7.0.0-3-1.7"
 
   # One assignment per entry in var.synapse_users, per workspace instance.
@@ -182,11 +158,9 @@ module "synapse_role_assignment" {
   principal_id         = var.synapse_users[each.value.user_key].principal_id
 }
 
-# =============================================================================
 # Key Vault Secrets — Synapse
-# =============================================================================
 module "key_vault_secrets_synapse" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.synapse_workspace
@@ -212,9 +186,7 @@ module "key_vault_secrets_synapse" {
   }
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_synapse" {
   description = "Synapse Analytics outputs."
   value = {

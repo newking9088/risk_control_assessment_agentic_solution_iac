@@ -1,4 +1,3 @@
-# =============================================================================
 # data_factory.tf — Azure Data Factory (CMK, managed private endpoint).
 #
 # BYOK dependency chain (Section 3.5):
@@ -17,15 +16,12 @@
 # Managed PE to Postgres also requires: enabled_modules.postgres = true
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__ — Terraform Enterprise registry hostname
-#   __TFE_ORG__      — Terraform Enterprise organization
-# =============================================================================
+#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
+#   platform      — Terraform Enterprise organization
 
-# =============================================================================
 # User-Assigned Managed Identity — Data Factory
-# =============================================================================
 module "user_assigned_identity_data_factory" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/user-assigned-identity/azurerm"
+  source  = "west.tfe.nginternal.com/platform/user-assigned-identity/azurerm"
   version = "4.1.0-3-1.7"
 
   for_each = var.enabled_modules.data_factory ? toset(["data_factory"]) : toset([])
@@ -36,11 +32,9 @@ module "user_assigned_identity_data_factory" {
   tags                = local.tags
 }
 
-# =============================================================================
 # BYOK Access Policy — Data Factory Identity
-# =============================================================================
 module "access_policies_byok_data_factory" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-access-policy/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-access-policy/azurerm"
   version = "12.0.0-3-1.7"
 
   for_each = {
@@ -60,11 +54,9 @@ module "access_policies_byok_data_factory" {
   certificate_permissions : []
 }
 
-# =============================================================================
 # Data Factory
-# =============================================================================
 module "data_factory" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/data-factory/azurerm"
+  source  = "west.tfe.nginternal.com/platform/data-factory/azurerm"
   version = "12.0.0-3-1.7"
 
   for_each = var.enabled_modules.data_factory ? toset(["app_adf"]) : toset([])
@@ -96,14 +88,12 @@ module "data_factory" {
   depends_on = [module.access_policies_byok_data_factory]
 }
 
-# =============================================================================
 # Managed Private Endpoint — PostgreSQL
-# =============================================================================
 # Connects the ADF managed virtual network to the PostgreSQL Flexible Server.
 # Only created when BOTH data_factory AND postgres are enabled, so that the
 # PostgreSQL server ID is always available when this resource is created.
 module "data_factory_managed_private_endpoint_postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/data-factory-managed-private-endpoint/azurerm"
+  source  = "west.tfe.nginternal.com/platform/data-factory-managed-private-endpoint/azurerm"
   version = "2.0.0-3-1.7"
 
   # Conditional cross-product: empty map when either module is disabled.
@@ -121,11 +111,9 @@ module "data_factory_managed_private_endpoint_postgres" {
   subresource_name   = "postgresqlServer"
 }
 
-# =============================================================================
 # Key Vault Secrets — Data Factory
-# =============================================================================
 module "key_vault_secrets_data_factory" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.data_factory
@@ -151,9 +139,7 @@ module "key_vault_secrets_data_factory" {
   }
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_data_factory" {
   description = "Data Factory outputs."
   value = {

@@ -1,4 +1,3 @@
-# =============================================================================
 # log_analytics.tf — Log Analytics Workspace.
 #
 # This workspace is the single diagnostics sink for all other modules.
@@ -11,15 +10,12 @@
 # Only deployed when: enabled_modules.diagnostic_logging = true
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__ — Terraform Enterprise registry hostname
-#   __TFE_ORG__      — Terraform Enterprise organization
-# =============================================================================
+#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
+#   platform      — Terraform Enterprise organization
 
-# =============================================================================
 # Log Analytics Workspace
-# =============================================================================
 module "log_analytics_workspace" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/log-analytics-workspace/azurerm"
+  source  = "west.tfe.nginternal.com/platform/log-analytics-workspace/azurerm"
   version = "11.0.0-3-1.7"
 
   # Key "diag" is the stable reference used by all diagnostic_settings modules.
@@ -38,9 +34,7 @@ module "log_analytics_workspace" {
   tags = local.tags
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_log_analytics" {
   description = "Log Analytics Workspace outputs."
   value = {

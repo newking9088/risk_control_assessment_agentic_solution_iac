@@ -1,4 +1,3 @@
-# =============================================================================
 # storage.tf — Azure Storage Account with HNS and customer-managed key (CMK).
 #
 # BYOK dependency chain (Section 3.5):
@@ -13,17 +12,13 @@
 # Only deployed when: enabled_modules.storage_account = true
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__       — Terraform Enterprise registry hostname
-#   __TFE_ORG__            — Terraform Enterprise organization
-#   __ORG_PUBLIC_IP_CIDR__ — Org egress CIDR, e.g. 203.0.113.0/24
-# =============================================================================
+#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
+#   platform            — Terraform Enterprise organization
 
-# =============================================================================
 # User-Assigned Managed Identity — Storage
-# =============================================================================
 # The storage account uses this identity to access the BYOK key vault for CMK.
 module "user_assigned_identity_storage" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/user-assigned-identity/azurerm"
+  source  = "west.tfe.nginternal.com/platform/user-assigned-identity/azurerm"
   version = "4.1.0-3-1.7"
 
   for_each = var.enabled_modules.storage_account ? toset(["storage"]) : toset([])
@@ -34,13 +29,11 @@ module "user_assigned_identity_storage" {
   tags                = local.tags
 }
 
-# =============================================================================
 # BYOK Access Policy — Storage Identity
-# =============================================================================
 # Grants the storage managed identity the minimum permissions required for CMK:
 # Get (read key metadata), WrapKey (encrypt data key), UnwrapKey (decrypt data key).
 module "access_policies_byok_storage" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-access-policy/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-access-policy/azurerm"
   version = "12.0.0-3-1.7"
 
   # Cross-product: one policy entry per identity instance per BYOK vault instance.
@@ -61,11 +54,9 @@ module "access_policies_byok_storage" {
   certificate_permissions : []
 }
 
-# =============================================================================
 # Storage Account
-# =============================================================================
 module "storage_accounts" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/storage-account/azurerm"
+  source  = "west.tfe.nginternal.com/platform/storage-account/azurerm"
   version = "15.4.2-3-1.7"
 
   for_each = var.enabled_modules.storage_account ? {
@@ -89,7 +80,7 @@ module "storage_accounts" {
   network_rules = {
     default_action             : "Deny"
     bypass                     : ["AzureServices"]
-    ip_rules                   : ["__ORG_PUBLIC_IP_CIDR__"]
+    ip_rules                   : var.org_public_ip_cidrs
     virtual_network_subnet_ids : [var.aks_subnet_id]
   }
 
@@ -112,11 +103,9 @@ module "storage_accounts" {
   depends_on = [module.access_policies_byok_storage]
 }
 
-# =============================================================================
 # Storage Containers
-# =============================================================================
 module "storage_containers" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/storage-container/azurerm"
+  source  = "west.tfe.nginternal.com/platform/storage-container/azurerm"
   version = "10.0.0-3-1.7"
 
   for_each = module.storage_accounts
@@ -126,13 +115,11 @@ module "storage_containers" {
   container_access_type = "private"
 }
 
-# =============================================================================
 # Time Sleep — Storage
-# =============================================================================
 # Waits 30 s after storage account creation before secrets are read.
 # Ensures the CMK binding has fully propagated to all Azure storage endpoints.
 module "time_sleep_storage" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/time-sleep/time"
+  source  = "west.tfe.nginternal.com/platform/time-sleep/time"
   version = "2.0.0-3-1.7"
 
   for_each        = module.storage_accounts
@@ -141,13 +128,11 @@ module "time_sleep_storage" {
   depends_on = [module.storage_accounts]
 }
 
-# =============================================================================
 # Diagnostic Settings — Storage Account (per sub-service)
-# =============================================================================
 # Azure storage diagnostics are attached to each sub-service endpoint separately,
 # not to the storage account resource itself.
 module "diagnostic_settings_storage_accounts" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/monitor-diagnostic-setting/azurerm"
+  source  = "west.tfe.nginternal.com/platform/monitor-diagnostic-setting/azurerm"
   version = "4.1.1-3-1.7"
 
   # Cross-product: one diagnostic setting per storage account per sub-service.
@@ -184,11 +169,9 @@ module "diagnostic_settings_storage_accounts" {
   ]
 }
 
-# =============================================================================
 # Key Vault Secrets — Storage
-# =============================================================================
 module "key_vault_secrets_storage" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.storage_accounts
@@ -208,9 +191,7 @@ module "key_vault_secrets_storage" {
   depends_on = [module.time_sleep_storage]
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_storage" {
   description = "Storage Account outputs."
   value = {

@@ -1,4 +1,3 @@
-# =============================================================================
 # cognitive.tf — Azure Cognitive Services (Form Recognizer, S0 SKU).
 #
 # BYOK dependency chain (Section 3.5):
@@ -13,16 +12,12 @@
 # Private endpoint also requires: enabled_modules.cognitive_subnet (subnet key string)
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__       — Terraform Enterprise registry hostname
-#   __TFE_ORG__            — Terraform Enterprise organization
-#   __ORG_PUBLIC_IP_CIDR__ — Org egress CIDR, e.g. 203.0.113.0/24
-# =============================================================================
+#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
+#   platform            — Terraform Enterprise organization
 
-# =============================================================================
 # User-Assigned Managed Identity — Cognitive Services
-# =============================================================================
 module "user_assigned_identity_cognitive" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/user-assigned-identity/azurerm"
+  source  = "west.tfe.nginternal.com/platform/user-assigned-identity/azurerm"
   version = "4.1.0-3-1.7"
 
   for_each = var.enabled_modules.cognitive_account ? toset(["cognitive"]) : toset([])
@@ -33,11 +28,9 @@ module "user_assigned_identity_cognitive" {
   tags                = local.tags
 }
 
-# =============================================================================
 # BYOK Access Policy — Cognitive Identity
-# =============================================================================
 module "access_policies_byok_cognitive" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-access-policy/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-access-policy/azurerm"
   version = "12.0.0-3-1.7"
 
   for_each = {
@@ -57,13 +50,11 @@ module "access_policies_byok_cognitive" {
   certificate_permissions : []
 }
 
-# =============================================================================
 # Time Sleep — Cognitive Services
-# =============================================================================
 # Azure AD policy replication latency: wait 30 s before creating the
 # Cognitive account so the identity can access the BYOK key on first use.
 module "time_sleep_cognitive" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/time-sleep/time"
+  source  = "west.tfe.nginternal.com/platform/time-sleep/time"
   version = "2.0.0-3-1.7"
 
   for_each        = var.enabled_modules.cognitive_account ? toset(["cognitive"]) : toset([])
@@ -72,11 +63,9 @@ module "time_sleep_cognitive" {
   depends_on = [module.access_policies_byok_cognitive]
 }
 
-# =============================================================================
 # Cognitive Services Account — Form Recognizer
-# =============================================================================
 module "cognitive_account" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/cognitive-account/azurerm"
+  source  = "west.tfe.nginternal.com/platform/cognitive-account/azurerm"
   version = "10.2.0-3-1.7"
 
   for_each = var.enabled_modules.cognitive_account ? toset(["form_recognizer"]) : toset([])
@@ -95,7 +84,7 @@ module "cognitive_account" {
   # Network ACLs restrict which IPs and subnets can reach the public endpoint.
   network_acls = {
     default_action : "Deny"
-    ip_rules       : ["__ORG_PUBLIC_IP_CIDR__"]
+    ip_rules       : var.org_public_ip_cidrs
     virtual_network_rules : [
       { subnet_id : data.azurerm_subnet.subnet[var.enabled_modules.cognitive_subnet].id },
       { subnet_id : var.aks_subnet_id },
@@ -119,11 +108,9 @@ module "cognitive_account" {
   depends_on = [module.time_sleep_cognitive]
 }
 
-# =============================================================================
 # Diagnostic Settings — Cognitive Services
-# =============================================================================
 module "diagnostic_settings_cognitive" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/monitor-diagnostic-setting/azurerm"
+  source  = "west.tfe.nginternal.com/platform/monitor-diagnostic-setting/azurerm"
   version = "4.1.1-3-1.7"
 
   for_each = var.enabled_modules.diagnostic_logging ? module.cognitive_account : {}
@@ -138,11 +125,9 @@ module "diagnostic_settings_cognitive" {
   ]
 }
 
-# =============================================================================
 # Private Endpoint — Cognitive Services
-# =============================================================================
 module "private_endpoint_cognitive" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/private-endpoint/azurerm"
+  source  = "west.tfe.nginternal.com/platform/private-endpoint/azurerm"
   version = "5.1.1-3-1.7"
 
   for_each = module.cognitive_account
@@ -157,9 +142,7 @@ module "private_endpoint_cognitive" {
   tags                           = local.tags
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_cognitive" {
   description = "Cognitive Services outputs."
   value = {

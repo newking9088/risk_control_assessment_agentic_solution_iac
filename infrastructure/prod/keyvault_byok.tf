@@ -1,4 +1,3 @@
-# =============================================================================
 # keyvault_byok.tf — BYOK (Bring Your Own Key) Key Vault.
 #
 # Provisions customer-managed encryption keys consumed by:
@@ -10,16 +9,12 @@
 # their own for_each conditions; this vault must exist before they do.
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__       — Terraform Enterprise registry hostname
-#   __TFE_ORG__            — Terraform Enterprise organization
-#   __ORG_PUBLIC_IP_CIDR__ — Org egress CIDR, e.g. 203.0.113.0/24
-# =============================================================================
+#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
+#   platform            — Terraform Enterprise organization
 
-# =============================================================================
 # BYOK Key Vault
-# =============================================================================
 module "keyvault_byok" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-byok/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-byok/azurerm"
   version = "19.1.1-3-1.7"
 
   for_each = var.enabled_modules.byok ? toset(["byok_keyvault"]) : toset([])
@@ -42,17 +37,15 @@ module "keyvault_byok" {
   network_acls = {
     bypass         : "AzureServices"
     default_action : "Deny"
-    ip_rules       : ["__ORG_PUBLIC_IP_CIDR__"]
+    ip_rules       : var.org_public_ip_cidrs
   }
 
   tags = local.tags
 }
 
-# =============================================================================
 # BYOK Key Vault — Admin Access Policies
-# =============================================================================
 module "access_policies_byok_keyvault_admins" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-access-policy/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-access-policy/azurerm"
   version = "12.0.0-3-1.7"
 
   for_each = {
@@ -73,11 +66,9 @@ module "access_policies_byok_keyvault_admins" {
   certificate_permissions : ["Backup", "Create", "Delete", "Get", "Import", "List", "Purge", "Recover", "Restore", "Update"]
 }
 
-# =============================================================================
 # Diagnostic Settings — BYOK Key Vault
-# =============================================================================
 module "diagnostic_settings_byok_keyvault" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/monitor-diagnostic-setting/azurerm"
+  source  = "west.tfe.nginternal.com/platform/monitor-diagnostic-setting/azurerm"
   version = "4.1.1-3-1.7"
 
   for_each = var.enabled_modules.diagnostic_logging ? module.keyvault_byok : {}
@@ -92,9 +83,7 @@ module "diagnostic_settings_byok_keyvault" {
   ]
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_keyvault_byok" {
   description = "BYOK Key Vault outputs."
   value = {

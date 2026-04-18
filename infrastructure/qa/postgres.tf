@@ -1,4 +1,3 @@
-# =============================================================================
 # postgres.tf — Azure PostgreSQL Flexible Server (v16, GP SKU, CMK).
 #
 # BYOK dependency chain (Section 3.5):
@@ -15,19 +14,12 @@
 # Private endpoint also requires: enabled_modules.postgres_subnet (subnet key string)
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__           — Terraform Enterprise registry hostname
-#   __TFE_ORG__                — Terraform Enterprise organization
-#   __ORG_PUBLIC_IP_START__    — First IP of org public range
-#   __ORG_PUBLIC_IP_END__      — Last IP of org public range
-#   __AKS_IP_START__           — First IP of AKS node pool subnet
-#   __AKS_IP_END__             — Last IP of AKS node pool subnet
-# =============================================================================
+#   west.tfe.nginternal.com           — Terraform Enterprise registry hostname
+#   platform                — Terraform Enterprise organization
 
-# =============================================================================
 # User-Assigned Managed Identity — PostgreSQL
-# =============================================================================
 module "user_assigned_identity_postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/user-assigned-identity/azurerm"
+  source  = "west.tfe.nginternal.com/platform/user-assigned-identity/azurerm"
   version = "4.1.0-3-1.7"
 
   for_each = var.enabled_modules.postgres ? toset(["postgres"]) : toset([])
@@ -38,11 +30,9 @@ module "user_assigned_identity_postgres" {
   tags                = local.tags
 }
 
-# =============================================================================
 # BYOK Access Policy — PostgreSQL Identity
-# =============================================================================
 module "access_policies_byok_postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/keyvault-access-policy/azurerm"
+  source  = "west.tfe.nginternal.com/platform/keyvault-access-policy/azurerm"
   version = "12.0.0-3-1.7"
 
   for_each = {
@@ -62,13 +52,11 @@ module "access_policies_byok_postgres" {
   certificate_permissions : []
 }
 
-# =============================================================================
 # Time Sleep — PostgreSQL
-# =============================================================================
 # Azure AD policy replication can take up to 30 s.
 # PostgreSQL will fail to create if the identity cannot yet access the BYOK key.
 module "time_sleep_postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/time-sleep/time"
+  source  = "west.tfe.nginternal.com/platform/time-sleep/time"
   version = "2.0.0-3-1.7"
 
   for_each        = module.user_assigned_identity_postgres
@@ -77,11 +65,9 @@ module "time_sleep_postgres" {
   depends_on = [module.access_policies_byok_postgres]
 }
 
-# =============================================================================
 # PostgreSQL Flexible Server
-# =============================================================================
 module "postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/postgresql-flexible/azurerm"
+  source  = "west.tfe.nginternal.com/platform/postgresql-flexible/azurerm"
   version = "6.1.0-3-1.7"
 
   for_each = var.enabled_modules.postgres ? toset(["app_postgres"]) : toset([])
@@ -131,12 +117,12 @@ module "postgres" {
   # Private endpoint handles pod-level access; these rules cover ops / break-glass.
   firewall_rules = {
     aks_nodes : {
-      start_ip_address : "__AKS_IP_START__"
-      end_ip_address   : "__AKS_IP_END__"
+      start_ip_address : "10.200.0.0"
+      end_ip_address   : "10.200.255.255"
     }
     org_global : {
-      start_ip_address : "__ORG_PUBLIC_IP_START__"
-      end_ip_address   : "__ORG_PUBLIC_IP_END__"
+      start_ip_address : "155.201.0.0"
+      end_ip_address   : "155.201.255.255"
     }
   }
 
@@ -161,11 +147,9 @@ module "postgres" {
   depends_on = [module.time_sleep_postgres]
 }
 
-# =============================================================================
 # PostgreSQL Flexible Database
-# =============================================================================
 module "postgres_flexible_databases" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/postgresql-flexible-server-database/azurerm"
+  source  = "west.tfe.nginternal.com/platform/postgresql-flexible-server-database/azurerm"
   version = "4.0.0-3-1.7"
 
   for_each = module.postgres
@@ -176,11 +160,9 @@ module "postgres_flexible_databases" {
   collation   = "en_US.utf8"
 }
 
-# =============================================================================
 # Private Endpoint — PostgreSQL
-# =============================================================================
 module "private_endpoints_postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/private-endpoint/azurerm"
+  source  = "west.tfe.nginternal.com/platform/private-endpoint/azurerm"
   version = "5.1.1-3-1.7"
 
   for_each = module.postgres
@@ -195,11 +177,9 @@ module "private_endpoints_postgres" {
   tags                           = local.tags
 }
 
-# =============================================================================
 # Diagnostic Settings — PostgreSQL
-# =============================================================================
 module "diagnostic_settings_postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/monitor-diagnostic-setting/azurerm"
+  source  = "west.tfe.nginternal.com/platform/monitor-diagnostic-setting/azurerm"
   version = "4.1.1-3-1.7"
 
   for_each = var.enabled_modules.diagnostic_logging ? module.postgres : {}
@@ -214,11 +194,9 @@ module "diagnostic_settings_postgres" {
   ]
 }
 
-# =============================================================================
 # Key Vault Secrets — PostgreSQL
-# =============================================================================
 module "key_vault_secrets_postgres" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/key-vault-secret/azurerm"
+  source  = "west.tfe.nginternal.com/platform/key-vault-secret/azurerm"
   version = "5.0.0-3-1.7"
 
   for_each     = module.postgres
@@ -268,9 +246,7 @@ module "key_vault_secrets_postgres" {
   }
 }
 
-# =============================================================================
 # Outputs
-# =============================================================================
 output "outputs_postgres" {
   description = "PostgreSQL Flexible Server outputs."
   value = {
