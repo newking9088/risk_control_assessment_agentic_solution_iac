@@ -1,0 +1,40 @@
+name: Terraform State Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [dev, qa, stage, prod]
+      action:
+        description: "State action to perform"
+        required: true
+        type: choice
+        options: [list, pull, show]
+
+permissions:
+  contents: read
+
+jobs:
+  state:
+    name: Terraform State — ${{ inputs.action }} (${{ inputs.environment }})
+    runs-on:
+      group: ${{ vars.RUNNER_GROUP }}
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ vars.TERRAFORM_VERSION }}
+          cli_config_credentials_token: ${{ secrets.TFE_TOKEN }}
+
+      - name: terraform init
+        working-directory: infrastructure/${{ inputs.environment }}
+        run: terraform init -input=false
+
+      - name: terraform state ${{ inputs.action }}
+        working-directory: infrastructure/${{ inputs.environment }}
+        run: terraform state ${{ inputs.action }}
