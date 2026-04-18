@@ -4,6 +4,62 @@ Stand up a dev environment from a fresh clone in roughly 10 minutes.
 
 ---
 
+## Clone-and-go in 5 steps
+
+1. Fork & clone this repo.
+
+2. Edit ONE file per env: `infrastructure/<env>/config.auto.tfvars`.
+   Replace the example values (Azure object IDs, subscription, subnet
+   ARM path, CIDRs) with your own.
+
+3. Edit `infrastructure/<env>/databricks/config.auto.tfvars` (Databricks
+   workspace ID and user).
+
+4. Retarget the Terraform Enterprise registry once across all `.tf` files:
+   ```bash
+   find infrastructure -name '*.tf' -exec sed -i.bak \
+     -e 's|west.tfe.nginternal.com|<your-tfe-hostname>|g' \
+     -e 's|/platform/|/<your-tfe-org>/|g' {} +
+   find infrastructure -name '*.tf.bak' -delete
+   ```
+
+5. In the GitHub UI, create four Environments (`dev`, `qa`, `stage`,
+   `prod`) and set the variables and secrets below on each.
+
+---
+
+## Required GitHub Environment configuration (per env)
+
+**Variables:**
+
+| Name | Example |
+|------|---------|
+| `GH_ORG` | `ng-cloud-platform` |
+| `REUSABLE_WORKFLOWS_REPO` | `terraform-reusable-workflows` |
+| `RUNNER_GROUP` | `dds-rca` (non-prod) / `dds-rca-prod` (prod) |
+| `GIT_FOLDER` | `infrastructure/dev/` |
+| `GIT_ID` | `obs` |
+| `GH_ENVIRONMENT` | `dev` |
+| `APP_NAME` | `risk-control-assessment` |
+| `TFE_ORG` | `platform` |
+| `TFE_HOSTNAME` | `west.tfe.nginternal.com` |
+| `TERRAFORM_VERSION` | `1.9.0` |
+
+**Secrets:**
+
+| Name | Purpose |
+|------|---------|
+| `AZURE_CLIENT_ID` | OIDC federated app reg |
+| `AZURE_TENANT_ID` | Azure AD tenant |
+| `AZURE_SUBSCRIPTION_ID` | Target subscription |
+| `TFE_TOKEN` | Terraform Enterprise team token |
+| `INFRACOST_API_KEY` | (only if infracost.yml enabled) |
+| `GITLEAKS_LICENSE` | (only if using Gitleaks Pro) |
+
+That's it. No `.tf` or workflow YAML edits required for normal use.
+
+---
+
 ## 1. Fork and Clone
 
 ```bash
@@ -36,7 +92,6 @@ az login                # interactive browser login
 
 **If using Terraform Enterprise:**
 ```bash
-# Your org's TFE hostname will be in provider.tf as __TFE_HOSTNAME__
 terraform login <tfe-hostname>
 ```
 
@@ -51,10 +106,15 @@ Open `infrastructure/dev/config.auto.tfvars` and fill in:
 
 | Key | Description |
 |-----|-------------|
+| `tfe_hostname` | Your Terraform Enterprise registry hostname |
+| `tfe_org` | Your Terraform Enterprise organisation name |
+| `spn_object_id` | Azure AD object ID of the deployment service principal |
+| `aks_spn_object_id` | Azure AD object ID of the AKS cluster service principal |
+| `org_public_ip_cidrs` | List of org egress CIDRs |
 | `aks_subnet_id` | Full ARM path of the AKS subnet your platform provisioned |
-| `keyvault_admins_app` | Map of `{ logical_name : "azure-ad-object-id" }` for Key Vault admins |
+| `keyvault_admins_app` | Map of `{ logical_name = "azure-ad-object-id" }` for Key Vault admins |
 | `keyvault_admins_byok` | Same map for the BYOK vault |
-| `enabled_modules` | Feature flags — start with `byok : true`, then `diagnostic_logging : true` |
+| `enabled_modules` | Feature flags — start with `byok = true`, then `diagnostic_logging = true` |
 
 Enable modules incrementally — `byok` must be `true` before enabling any
 CMK-backed resource (`storage_account`, `postgres`, `service_bus`, etc.).
