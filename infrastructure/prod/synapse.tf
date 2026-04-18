@@ -14,7 +14,6 @@
 # Only deployed when: enabled_modules.synapse = true
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com                   — Terraform Enterprise registry hostname
 #   platform                        — Terraform Enterprise organization
 
 # Locals — Synapse Firewall Rules

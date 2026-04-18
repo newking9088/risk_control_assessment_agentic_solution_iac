@@ -10,7 +10,6 @@
 # Only deployed when: enabled_modules.diagnostic_logging = true
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
 #   platform      — Terraform Enterprise organization
 
 # Log Analytics Workspace

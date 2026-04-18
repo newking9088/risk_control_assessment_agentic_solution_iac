@@ -10,7 +10,6 @@
 # Only deployed when: enabled_modules.search_service = true
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
 #   platform            — Terraform Enterprise organization
 
 # Cognitive Search Service

@@ -16,7 +16,6 @@
 # Managed PE to Postgres also requires: enabled_modules.postgres = true
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
 #   platform      — Terraform Enterprise organization
 
 # User-Assigned Managed Identity — Data Factory

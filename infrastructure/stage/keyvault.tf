@@ -5,7 +5,6 @@
 # strings and keys here via the key-vault-secret module.
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
 #   platform            — Terraform Enterprise organization
 
 # Application Key Vault

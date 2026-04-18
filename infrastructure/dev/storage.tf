@@ -12,7 +12,6 @@
 # Only deployed when: enabled_modules.storage_account = true
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
 #   platform            — Terraform Enterprise organization
 
 # User-Assigned Managed Identity — Storage

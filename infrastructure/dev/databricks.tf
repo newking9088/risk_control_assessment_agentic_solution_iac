@@ -17,7 +17,6 @@
 #   enabled_modules.databricks_private_endpoint_subnet — private endpoint subnet key
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
 #   platform      — Terraform Enterprise organization
 
 # Databricks Workspace

@@ -13,7 +13,6 @@
 # Private endpoint also requires: enabled_modules.redis_subnet (subnet key string)
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com           — Terraform Enterprise registry hostname
 #   platform                — Terraform Enterprise organization
 
 # Redis Cache

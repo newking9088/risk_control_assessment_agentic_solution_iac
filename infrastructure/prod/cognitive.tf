@@ -12,7 +12,6 @@
 # Private endpoint also requires: enabled_modules.cognitive_subnet (subnet key string)
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
 #   platform            — Terraform Enterprise organization
 
 # User-Assigned Managed Identity — Cognitive Services

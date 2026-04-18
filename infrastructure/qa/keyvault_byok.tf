@@ -9,7 +9,6 @@
 # their own for_each conditions; this vault must exist before they do.
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com       — Terraform Enterprise registry hostname
 #   platform            — Terraform Enterprise organization
 
 # BYOK Key Vault

@@ -13,7 +13,6 @@
 #   (workspace must exist before users can be provisioned)
 #
 # Placeholders in this file:
-#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
 #   platform      — Terraform Enterprise organization
 
 # Provider Configuration
