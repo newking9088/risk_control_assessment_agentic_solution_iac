@@ -1,0 +1,93 @@
+name: Terraform Drift Detection
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # daily at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    name: Terraform plan --detailed-exitcode (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    fail-fast: false
+    strategy:
+      matrix:
+        env: [dev, qa, stage, prod]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+          cli_config_credentials_token: ${{ secrets.TFE_TOKEN }}
+
+      - name: terraform init
+        working-directory: infrastructure/${{ matrix.env }}
+        run: terraform init -input=false
+
+      - name: terraform plan (drift check)
+        id: plan
+        working-directory: infrastructure/${{ matrix.env }}
+        run: |
+          set -o pipefail
+          terraform plan -detailed-exitcode -no-color -input=false \
+            2>&1 | tee plan_output.txt
+          echo "exitcode=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Open or update drift issue
+        if: steps.plan.outputs.exitcode == '2'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const env  = '${{ matrix.env }}';
+            const fs   = require('fs');
+            const plan = fs.existsSync(`infrastructure/${env}/plan_output.txt`)
+              ? fs.readFileSync(`infrastructure/${env}/plan_output.txt`, 'utf8').slice(0, 10000)
+              : '(no plan output captured)';
+            const title = `[Drift] \`${env}\` — infrastructure state diverged`;
+            const body  = [
+              `## Terraform Drift Detected — \`${env}\``,
+              ``,
+              `**Run:** ${{ github.run_id }} (${new Date().toISOString()})`,
+              ``,
+              `Azure state diverges from Terraform. Someone changed resources outside Terraform.`,
+              ``,
+              `**To resolve:** open a branch, run \`terraform apply\`, merge the fix PR.`,
+              ``,
+              `<details><summary>Plan output</summary>`,
+              ``,
+              `\`\`\``,
+              plan,
+              `\`\`\``,
+              `</details>`,
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              state: 'open',
+              labels: 'drift',
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner:        context.repo.owner,
+                repo:         context.repo.repo,
+                issue_number: match.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner:  context.repo.owner,
+                repo:   context.repo.repo,
+                title,
+                body,
+                labels: ['drift'],
+              });
+            }

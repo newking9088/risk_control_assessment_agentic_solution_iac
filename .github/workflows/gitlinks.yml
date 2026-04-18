@@ -1,0 +1,19 @@
+name: GitLinks
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gitlinks:
+    name: GitLinks scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: gitlinks/gitlinks@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

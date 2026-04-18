@@ -1,0 +1,84 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infrastructure/**'
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  # ── fmt + validate ────────────────────────────────────────────────────────────
+  fmt-validate:
+    name: fmt + validate (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    fail-fast: false
+    strategy:
+      matrix:
+        env: [dev, qa, stage, prod]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: terraform fmt --check
+        run: terraform fmt --check --recursive infrastructure
+
+      - name: terraform init (no backend)
+        working-directory: infrastructure/${{ matrix.env }}
+        run: terraform init -backend=false
+
+      - name: terraform validate
+        working-directory: infrastructure/${{ matrix.env }}
+        run: terraform validate
+
+  # ── tflint ───────────────────────────────────────────────────────────────────
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: terraform-linters/setup-tflint@latest
+        with:
+          tflint_version: v0.53.0
+
+      - name: tflint init
+        run: tflint --init
+
+      - name: tflint recursive
+        run: tflint --recursive --format compact
+
+  # ── trivy security scan ───────────────────────────────────────────────────────
+  trivy:
+    name: trivy config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: config
+          scan-ref: infrastructure
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: true
+          exit-code: 0
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+          category: trivy-config

@@ -1,0 +1,45 @@
+name: Infranot
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  infranot:
+    name: Infranot diff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Capture base infrastructure
+        run: |
+          git checkout "${{ github.event.pull_request.base.sha }}" -- infrastructure/
+          cp -r infrastructure /tmp/infranot-base
+          git checkout "${{ github.event.pull_request.head.sha }}" -- infrastructure/
+
+      - name: Post diff comment
+        uses: actions/github-script@v7
+        env:
+          INFRANOT_API_KEY: ${{ secrets.INFRANOT_API_KEY }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { execSync } = require('child_process');
+            const diff = execSync(
+              'diff -rq /tmp/infranot-base infrastructure/ || true'
+            ).toString().trim();
+            const body = diff
+              ? `## Infranot diff\n\`\`\`\n${diff.slice(0, 8000)}\n\`\`\``
+              : '## Infranot diff\n_No infrastructure file changes detected._';
+            await github.rest.issues.createComment({
+              owner:        context.repo.owner,
+              repo:         context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
