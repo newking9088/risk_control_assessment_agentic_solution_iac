@@ -1,9 +1,6 @@
 # Edit this file (and databricks/config.auto.tfvars) to onboard a new environment.
 # Nothing else under infrastructure/dev/ should need changes.
 
-# — Terraform Enterprise registry (where the modules live) —
-tfe_hostname = "west.tfe.nginternal.com"
-tfe_org      = "platform"
 
 # — Azure identity used by Terraform & AKS —
 spn_object_id       = "143363ce-d4c5-4c0d-b3d9-84d5c252bc97"

@@ -26,16 +26,6 @@ variable "aks_subnet_id" {
   description = "Full ARM resource ID of the AKS subnet."
 }
 
-variable "tfe_hostname" {
-  type        = string
-  description = "Terraform Enterprise registry hostname."
-}
-
-variable "tfe_org" {
-  type        = string
-  description = "Terraform Enterprise organisation name."
-}
-
 variable "spn_object_id" {
   type        = string
   description = "Azure AD object ID of the deployment service principal."
