@@ -53,7 +53,7 @@ variable "org_public_ip_cidrs" {
 
 variable "platform_admins" {
   type        = map(string)
-  default     = { platform_admins = "00000000-0000-0000-0000-000000000000" }
+  default     = {}
   description = "Principal name => Azure AD object ID for blob contributor access."
 }
 
@@ -62,12 +62,7 @@ variable "synapse_users" {
     role_name    = string
     principal_id = string
   }))
-  default = {
-    admin = {
-      role_name    = "Synapse Administrator"
-      principal_id = "00000000-0000-0000-0000-000000000000"
-    }
-  }
+  default     = {}
   description = "Synapse role assignments: logical_name => { role_name, principal_id }."
 }
 
