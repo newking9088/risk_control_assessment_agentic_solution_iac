@@ -1,29 +1,14 @@
-# =============================================================================
-# databricks/config.auto.tfvars — Prod Databricks sub-root configuration.
-#
-# Applied only when the databricks workflow variant is triggered:
-#   terraform-plan-prod.yml  (input: databricks = true)
-#   terraform-apply-prod.yml (input: databricks = true)
-#
-# IMPORTANT: Prod Databricks workspace is separate from non-prod.
-# Do NOT reuse the same workspace_id / workspace_url as dev/qa/stage.
-# Update these values manually with the prod workspace coordinates.
-#
-# Manual replacement (prod-specific — do NOT use the global replace script):
-#   sed -i 's|__DATABRICKS_WORKSPACE_RESOURCE_ID__|<prod_arm_path>|g' \
-#     infrastructure/prod/databricks/config.auto.tfvars
-#   sed -i 's|__DATABRICKS_WORKSPACE_URL__|<prod_hostname>|g' \
-#     infrastructure/prod/databricks/config.auto.tfvars
-# =============================================================================
+# Edit this file to configure the Databricks workspace for this environment.
+# workspace_id : Full ARM resource ID of the Databricks workspace.
+# workspace_url: Hostname of the Databricks workspace (e.g. adb-1234567890.12.azuredatabricks.net).
 
 databricks = {
-  workspace_id  : "__DATABRICKS_WORKSPACE_RESOURCE_ID__"
-  workspace_url : "__DATABRICKS_WORKSPACE_URL__"
-
-  users : {
-    __DATABRICKS_ADMIN_KEY__ : {
-      user_email : "__DATABRICKS_ADMIN_EMAIL__"
-      user_key   : "__DATABRICKS_ADMIN_KEY__"
+  workspace_id  = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-app-dev/providers/Microsoft.Databricks/workspaces/dbw-rca-dev"
+  workspace_url = "adb-1234567890123456.1.azuredatabricks.net"
+  users = {
+    raj_paudel = {
+      user_email = "raj.paudel@example.com"
+      user_key   = "raj_paudel"
     }
   }
 }

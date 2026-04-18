@@ -1,22 +1,14 @@
-# =============================================================================
-# databricks/config.auto.tfvars — Stage Databricks sub-root configuration.
-#
-# Applied only when the databricks workflow variant is triggered:
-#   terraform-plan-stage.yml  (input: databricks = true)
-#   terraform-apply-stage.yml (input: databricks = true)
-#
-# NOTE: If stage uses a different Databricks workspace than dev/qa, update
-# workspace_id and workspace_url independently here.
-# =============================================================================
+# Edit this file to configure the Databricks workspace for this environment.
+# workspace_id : Full ARM resource ID of the Databricks workspace.
+# workspace_url: Hostname of the Databricks workspace (e.g. adb-1234567890.12.azuredatabricks.net).
 
 databricks = {
-  workspace_id  : "__DATABRICKS_WORKSPACE_RESOURCE_ID__"
-  workspace_url : "__DATABRICKS_WORKSPACE_URL__"
-
-  users : {
-    __DATABRICKS_ADMIN_KEY__ : {
-      user_email : "__DATABRICKS_ADMIN_EMAIL__"
-      user_key   : "__DATABRICKS_ADMIN_KEY__"
+  workspace_id  = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-app-dev/providers/Microsoft.Databricks/workspaces/dbw-rca-dev"
+  workspace_url = "adb-1234567890123456.1.azuredatabricks.net"
+  users = {
+    raj_paudel = {
+      user_email = "raj.paudel@example.com"
+      user_key   = "raj_paudel"
     }
   }
 }

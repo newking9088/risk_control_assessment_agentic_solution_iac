@@ -1,4 +1,3 @@
-# =============================================================================
 # databricks/admin.tf — Databricks user management (separate Terraform root).
 #
 # This root uses the databricks/databricks provider, not azurerm.
@@ -14,13 +13,10 @@
 #   (workspace must exist before users can be provisioned)
 #
 # Placeholders in this file:
-#   __TFE_HOSTNAME__ — Terraform Enterprise registry hostname
-#   __TFE_ORG__      — Terraform Enterprise organization
-# =============================================================================
+#   west.tfe.nginternal.com — Terraform Enterprise registry hostname
+#   platform      — Terraform Enterprise organization
 
-# =============================================================================
 # Provider Configuration
-# =============================================================================
 terraform {
   required_providers {
     databricks = {
@@ -38,22 +34,18 @@ provider "databricks" {
   host              = format("https://%s", var.databricks.workspace_url)
 }
 
-# =============================================================================
 # Admins Group Lookup
-# =============================================================================
 # The "admins" group is created automatically by Databricks on workspace init.
 # We look it up rather than creating it so we never accidentally recreate it.
 data "databricks_group" "admins" {
   display_name = "admins"
 }
 
-# =============================================================================
 # Databricks Users
-# =============================================================================
 # Creates one Databricks user per entry in var.databricks.users.
 # The user_key is the logical map key; user_email is the identity used for login.
 module "databricks_users" {
-  source  = "__TFE_HOSTNAME__/__TFE_ORG__/group-member/databricks"
+  source  = "west.tfe.nginternal.com/platform/group-member/databricks"
   version = "4.0.0-3-1.3"
 
   # Iterate every user defined in config.auto.tfvars.
