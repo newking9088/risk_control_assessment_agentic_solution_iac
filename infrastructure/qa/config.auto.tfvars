@@ -26,15 +26,19 @@ enabled_modules = {
   storage_account : false
 
   redis_cache  : false
+  # Subnet key string from __ngc.subnets — required when redis_cache = true.
+  # Example: "redis-subnet"
   redis_subnet : null
 
   cognitive_account : false
+  # Subnet key string from __ngc.subnets — required when cognitive_account = true.
   cognitive_subnet  : null
 
   service_bus    : false
   search_service : false
 
   postgres        : false
+  # Subnet key string from __ngc.subnets — required when postgres = true.
   postgres_subnet : null
 
   databricks                         : false
@@ -43,6 +47,7 @@ enabled_modules = {
   databricks_private_endpoint_subnet : null
 
   data_factory        : false
+  # Subnet key string from __ngc.subnets — required when data_factory = true.
   data_factory_subnet : null
 
   synapse : false
