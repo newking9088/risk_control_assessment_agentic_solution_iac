@@ -1,0 +1,30 @@
+{
+  "name": "risk-control-assessment-iac",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "1.6.0"
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers-contrib/features/tflint:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hashicorp.terraform",
+        "ms-vscode.azure-account",
+        "github.vscode-pull-request-github",
+        "GitHub.copilot"
+      ],
+      "settings": {
+        "terraform.experimentalFeatures.prefixModuleOutput": true,
+        "[terraform]": { "editor.formatOnSave": true },
+        "[terraform-vars]": { "editor.formatOnSave": true }
+      }
+    }
+  },
+  "postCreateCommand": "bash scripts/bootstrap.sh || true",
+  "remoteEnv": {
+    "TF_IN_AUTOMATION": "true"
+  }
+}
